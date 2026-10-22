@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>读史记 · 7寸彩墨屏专版 (Color E-Ink Android Reader V6)</title>
+<style>
+  /* ==========================================================================
+     1. 彩墨屏 (Kaleido 3 / Gallery 3) 色彩与独立字号/字重变量系统
+     ========================================================================== */
+  :root {
+    --bg-outer: #d4cfc2;
+    --bg-paper: #fbf9f4;
+    --bg-panel: #f0ebe1;
+    --bg-chip: #e6dfd1;
+    --ink-main: #000000;
+    --ink-sub: #2b2823;
+    --ink-vernacular: #3d352e;
+    --ink-muted: #665f54;
+    --border-ink: #1a1815;
+    --border-soft: #b5ad9e;
+
+    /* 三家注 + 校记 彩墨屏高辨识度色系 */
+    --c-jijie-fg: #003d99;
+    --c-jijie-bg: #e1ecfc;
+
+    --c-suoyin-fg: #00592d;
+    --c-suoyin-bg: #daf2e5;
+
+    --c-zhengyi-fg: #991717;
+    --c-zhengyi-bg: #fce2de;
+
+    --c-jiaoji-fg: #6b1478;
+    --c-jiaoji-bg: #f3dff7;
+
+    /* 行内双排白话译文：深琥珀褐 + 暖杏黄淡底 */
+    --c-vb-fg: #593300;
+    --c-vb-bg: #f7ebd2;
+
+    --c-vermilion: #a32012;
+    --c-vermilion-bg: #f7e1de;
+    --c-indigo: #1b416e;
+    --c-indigo-bg: #dce8f7;
+    --c-ochre: #805110;
+    --c-ochre-bg: #f5ead6;
+    --c-clause-active: #f5d793;
+
+    --font-serif: "Songti SC", "Noto Serif SC", "Source Han Serif SC", "STSong", "SimSun", serif;
+    --font-kai: "Kaiti SC", "STKaiti", "KaiTi", "LXGW WenKai", serif;
+    --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+
+    --reader-font: var(--font-serif);
+
+    /* 三类文本独立的【字号】与【字重】CSS 变量 */
+    --font-size-main: 26px;      /* 正文默认 26px */
+    --font-weight-main: 600;     /* 正文默认加粗 600 */
+
+    --font-size-note: 20px;      /* 三家注默认 20px */
+    --font-weight-note: 400;     /* 三家注默认细体 400 */
+
+    --font-size-vb: 15px;        /* 双排翻译默认 15px */
+    --font-weight-vb: 400;       /* 双排翻译默认细体 400 */
+
+    --line-height-main: 2.2;
+    --letter-spacing-main: 0.03em;
+  }
+
+  /* 纯黑白墨水屏模式 */
+  body.eink-bw {
+    --bg-outer: #cccccc;
+    --bg-paper: #ffffff;
+    --bg-panel: #efefef;
+    --bg-chip: #e0e0e0;
+    --ink-main: #000000;
+    --ink-sub: #141414;
+    --ink-vernacular: #222222;
+    --ink-muted: #505050;
+    --border-ink: #000000;
+    --border-soft: #777777;
+    --c-jijie-fg: #000000;
+    --c-jijie-bg: #e8e8e8;
+    --c-suoyin-fg: #000000;
+    --c-suoyin-bg: #e0e0e0;
+    --c-zhengyi-fg: #000000;
+    --c-zhengyi-bg: #e4e4e4;
+    --c-jiaoji-fg: #000000;
+    --c-jiaoji-bg: #eaeaea;
+    --c-vb-fg: #1a1a1a;
+    --c-vb-bg: #f0f0f0;
+    --c-vermilion: #000000;
+    --c-vermilion-bg: #e0e0e0;
+    --c-indigo: #000000;
+    --c-indigo-bg: #ebebeb;
+    --c-ochre: #000000;
+    --c-ochre-bg: #e5e5e5;
+    --c-clause-active: #d0d0d0;
+  }
+
+  /* 夜间暗墨模式 */
+  body.eink-dark {
+    --bg-outer: #0a0a0c;
+    --bg-paper: #141518;
+    --bg-panel: #1f2126;
+    --bg-chip: #2b2e35;
+    --ink-main: #f0ece1;
+    --ink-sub: #c4beb2;
+    --ink-vernacular: #aba598;
+    --ink-muted: #7d786e;
+    --border-ink: #b0aa9e;
+    --border-soft: #454852;
+    --c-jijie-fg: #7cb6ff;
+    --c-jijie-bg: #172a45;
+    --c-suoyin-fg: #6ee0a5;
+    --c-suoyin-bg: #143324;
+    --c-zhengyi-fg: #ff8a80;
+    --c-zhengyi-bg: #3d1b18;
+    --c-jiaoji-fg: #e594f2;
+    --c-jiaoji-bg: #331938;
+    --c-vb-fg: #f0c27b;
+    --c-vb-bg: #2e2415;
+    --c-vermilion: #ff7f6e;
+    --c-vermilion-bg: #3b221e;
+    --c-indigo: #82aee0;
+    --c-indigo-bg: #1d2b3d;
+    --c-ochre: #deb059;
+    --c-ochre-bg: #382e1b;
+    --c-clause-active: #423316;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    transition: none !important;
+    animation: none !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--bg-outer);
+    color: var(--ink-main);
+    font-family: var(--font-sans);
+    user-select: none;
+  }
+
+  /* ==========================================================================
+     2. 7寸彩墨屏高屏占比无框画布
+     ========================================================================== */
+  .app-shell {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .eink-device {
+    width: 100%;
+    height: 100%;
+    background: var(--bg-paper);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  body.frame-7inch .eink-device {
+    max-width: 620px;
+    max-height: 840px;
+    border: 2px solid var(--border-ink);
+    border-radius: 6px;
+  }
+
+  @media (max-width: 660px) {
+    body.frame-7inch .eink-device {
+      max-width: 100%;
+      max-height: 100%;
+      border: none;
+      border-radius: 0;
+    }
+  }
+
+  .sys-micro-top, .sys-micro-bottom {
+    height: 22px;
+    min-height: 22px;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--ink-muted);
+    background: var(--bg-paper);
+    z-index: 10;
+    font-family: var(--font-sans);
+  }
+
+  /* ==========================================================================
+     3. 浮动页头与页尾菜单 (默认隐藏，点击屏幕中央区域时浮现)
+     ========================================================================== */
+  .floating-hud-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 44px;
+    padding: 0 10px;
+    background: var(--bg-panel);
+    border-bottom: 2px solid var(--border-ink);
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 45;
+  }
+
+  .floating-hud-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 44px;
+    background: var(--bg-panel);
+    border-top: 2px solid var(--border-ink);
+    display: none;
+    grid-template-columns: 1fr 1.3fr 1fr;
+    align-items: center;
+    z-index: 45;
+  }
+
+  body.hud-visible .floating-hud-top { display: flex; }
+  body.hud-visible .floating-hud-bottom { display: grid; }
+
+  .hud-left, .hud-right {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .status-seal {
+    background: var(--c-vermilion);
+    color: #fff;
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 11.5px;
+    padding: 2px 5px;
+    border: 1px solid var(--border-ink);
+  }
+
+  .micro-btn {
+    padding: 3px 8px;
+    font-size: 11.5px;
+    font-weight: 700;
+    border: 1.5px solid var(--border-ink);
+    background: var(--bg-paper);
+    color: var(--ink-main);
+    cursor: pointer;
+  }
+  .micro-btn.active {
+    background: var(--ink-main);
+    color: var(--bg-paper);
+  }
+  .micro-btn.accent {
+    background: var(--c-vermilion-bg);
+    color: var(--c-vermilion);
+    border-color: var(--c-vermilion);
+  }
+
+  .pager-btn {
+    height: 100%;
+    border: none;
+    background: transparent;
+    color: var(--ink-main);
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pager-center-btn {
+    height: 100%;
+    border-left: 1.5px solid var(--border-ink);
+    border-right: 1.5px solid var(--border-ink);
+    background: var(--bg-paper);
+    color: var(--ink-main);
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ==========================================================================
+     4. 满屏无框流式阅读区
+     ========================================================================== */
+  .reader-stage {
+    flex: 1;
+    width: 100%;
+    height: calc(100% - 44px);
+    padding: 4px 10px;
+    background: var(--bg-paper);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .pane-classical {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    font-family: var(--reader-font);
+    font-size: var(--font-size-main);
+    font-weight: var(--font-weight-main);
+    line-height: var(--line-height-main);
+    letter-spacing: var(--letter-spacing-main);
+    color: var(--ink-main);
+    overflow: auto;
+    text-align: justify;
+    padding: 2px 4px;
+  }
+
+  .pane-vernacular-split {
+    display: none;
+    flex: 0 0 40%;
+    width: 100%;
+    border-top: 1.5px dashed var(--border-soft);
+    padding: 6px 4px 2px;
+    font-family: var(--reader-font);
+    font-size: calc(var(--font-size-vb) + 4px);
+    font-weight: var(--font-weight-vb);
+    line-height: 1.85;
+    letter-spacing: var(--letter-spacing-main);
+    color: var(--ink-vernacular);
+    overflow: auto;
+  }
+
+  body.vb-mode-split .pane-vernacular-split {
+    display: block;
+  }
+
+  body.dir-vertical .pane-classical,
+  body.dir-vertical .pane-vernacular-split {
+    writing-mode: vertical-rl;
+    -webkit-writing-mode: vertical-rl;
+    text-orientation: mixed;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  /* ==========================================================================
+     5. V6 核心排版细节：让正文刚好在两行翻译的正中间！
+     ========================================================================== */
+
+  .continuous-para {
+    display: block;
+    margin-bottom: 10px;
+  }
+  body.dir-vertical .continuous-para {
+    display: inline;
+  }
+
+  .para-num-badge {
+    display: inline-block;
+    background: var(--ink-main);
+    color: var(--bg-paper);
+    font-family: var(--font-serif);
+    font-size: 0.74em;
+    font-weight: 800;
+    line-height: 1.1;
+    padding: 2px 3px;
+    margin-top: 0.65em;
+    margin-bottom: 3px;
+    cursor: pointer;
+    border: 1px solid var(--border-ink);
+    vertical-align: baseline;
+  }
+  body.dir-horizontal .para-num-badge {
+    margin-top: 0;
+    margin-left: 1em;
+    margin-right: 4px;
+    padding: 1px 6px;
+  }
+
+  .para-lead-bold {
+    font-weight: 900;
+    color: var(--ink-main);
+  }
+
+  .clause-unit {
+    display: inline;
+    cursor: pointer;
+  }
+  .clause-unit.clause-active {
+    background-color: var(--c-clause-active);
+  }
+
+  .punct-char {
+    display: inline;
+  }
+  body.dir-vertical .punct-char {
+    letter-spacing: -0.18em;
+    margin-bottom: 0.12em;
+  }
+
+  .person-wrap {
+    display: inline;
+    cursor: pointer;
+  }
+  .person-name {
+    font-weight: 800;
+    color: var(--ink-main);
+    border-bottom: 1.5px solid var(--ink-main);
+  }
+  body.dir-vertical .person-name {
+    border-bottom: none;
+    border-left: 1.5px solid var(--ink-main);
+    padding-left: 1px;
+  }
+
+  .lifespan-tag {
+    font-size: 0.58em;
+    font-family: var(--font-sans);
+    color: var(--ink-muted);
+    font-weight: 400;
+    margin: 0 1px;
+  }
+  body.dir-vertical .lifespan-tag {
+    font-family: var(--reader-font);
+  }
+  body.hide-lifespan .lifespan-tag {
+    display: none !important;
+  }
+
+  .place-box {
+    display: inline;
+    border: 1.5px solid var(--ink-sub);
+    border-radius: 3px;
+    padding: 0 1px;
+    margin: 0 1px;
+    cursor: pointer;
+  }
+  body.dir-vertical .place-box {
+    padding: 1px 0;
+    margin: 1px 0;
+  }
+
+  .term-box {
+    display: inline;
+    border: 1.5px dashed var(--ink-muted);
+    border-radius: 3px;
+    padding: 0 1px;
+    margin: 0 1px;
+    cursor: pointer;
+  }
+  body.dir-vertical .term-box {
+    padding: 1px 0;
+    margin: 1px 0;
+  }
+
+  /* 带水平横排拼音的汉字 */
+  .hz-ruby {
+    position: relative;
+    display: inline;
+  }
+  body.dir-vertical:not(.hide-pinyin) .hz-ruby {
+    padding-top: 0.58em;
+  }
+  body.dir-horizontal:not(.hide-pinyin) .hz-ruby {
+    display: inline-block;
+    padding-top: 0.55em;
+    text-indent: 0;
+  }
+  .hz-ruby-py {
+    position: absolute;
+    writing-mode: horizontal-tb !important;
+    -webkit-writing-mode: horizontal-tb !important;
+    font-family: var(--font-sans);
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--c-vermilion);
+    line-height: 1;
+    letter-spacing: 0;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  body.dir-vertical .hz-ruby-py {
+    top: 0.03em;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  body.dir-horizontal .hz-ruby-py {
+    top: -0.15em;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  body.hide-pinyin .hz-ruby-py {
+    display: none !important;
+  }
+
+  /* 三家注与校勘记 */
+  .note-wrap-inline {
+    display: inline;
+    font-size: var(--font-size-note);
+    font-weight: var(--font-weight-note);
+    padding: 1px 1px;
+    margin: 2px 0;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  body.dir-horizontal .note-wrap-inline {
+    padding: 0 4px;
+    margin: 0 2px;
+  }
+
+  .note-reminder-tag {
+    display: inline;
+    font-family: var(--font-serif);
+    font-weight: 600;
+  }
+
+  .note-mid-sep {
+    display: none;
+    margin: 1px 0;
+    font-weight: 400;
+    opacity: 0.85;
+  }
+  body.dir-horizontal .note-mid-sep {
+    margin: 0 3px;
+  }
+
+  .note-full-inline {
+    display: none;
+    font-family: var(--reader-font);
+    font-size: var(--font-size-note);
+    font-weight: var(--font-weight-note);
+  }
+
+  body.show-note-fulltext .note-full-inline {
+    display: inline;
+  }
+  body.show-note-fulltext:not(.hide-note-reminder) .note-mid-sep {
+    display: inline;
+  }
+  body.hide-note-reminder .note-reminder-tag {
+    display: none !important;
+  }
+  body.hide-note-reminder:not(.show-note-fulltext) .note-wrap-inline {
+    display: none !important;
+  }
+
+  .type-jijie {
+    color: var(--c-jijie-fg);
+    background-color: var(--c-jijie-bg);
+  }
+  .type-suoyin {
+    color: var(--c-suoyin-fg);
+    background-color: var(--c-suoyin-bg);
+  }
+  .type-zhengyi {
+    color: var(--c-zhengyi-fg);
+    background-color: var(--c-zhengyi-bg);
+  }
+  .type-jiaoji {
+    color: var(--c-jiaoji-fg);
+    background-color: var(--c-jiaoji-bg);
+  }
+
+  .note-reminder-arrow {
+    color: var(--c-vermilion);
+    font-size: 0.88em;
+  }
+
+  body.note-bg-off .note-wrap-inline,
+  body.note-bg-off .interleaved-vb {
+    background-color: transparent !important;
+  }
+
+  /* ==========================================================================
+     【V6 精确几何居中】让正文刚好在两行翻译的正中间！
+     原理说明：
+     在 vertical-rl 中，inline-flex 容器设置 vertical-align: baseline 时，
+     CSS 规范会将第一个子项（即右小列 .vb-subcol:first-child）的中心线与正文字列的中心线对齐。
+     此时右小列中心 = 正文中心，而左小列完全偏向左侧。
+     因此，只需将整个双排容器向右平移【半个子列宽度 + 半个列间距】，
+     即 `left: calc(var(--font-size-vb) * 0.58 + 1px)`，
+     两列翻译中间的分界缝就会 100% 穿过正文字列的正中心（正文刚好骑在两行翻译正中间）！
+     ========================================================================== */
+  .interleaved-vb {
+    display: none;
+    font-family: var(--font-kai);
+    color: var(--c-vb-fg);
+    background-color: var(--c-vb-bg);
+    border-radius: 3px;
+    padding: 3px 2px;
+    margin: 3px 0;
+    cursor: pointer;
+  }
+
+  body.vb-mode-interleave.dir-vertical .interleaved-vb {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    vertical-align: baseline;
+    gap: 2px;
+    position: relative;
+    /* 向右平移半个小字列宽，使右小列在正文中心右侧、左小列在正文中心左侧，正文刚好在两行翻译正中间！ */
+    left: calc(var(--font-size-vb) * 0.58 + 1px);
+  }
+
+  body.vb-mode-interleave.dir-horizontal .interleaved-vb {
+    display: inline-flex;
+    flex-direction: column;
+    vertical-align: middle;
+    margin: 0 4px;
+    padding: 1px 5px;
+  }
+
+  .vb-subcol {
+    display: block;
+    font-size: var(--font-size-vb);
+    font-weight: var(--font-weight-vb);
+    line-height: 1.15;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  /* 段尾可选 [图][策][评][料][本] 线框入口 */
+  .entry-wireframe-bar {
+    display: none;
+    margin: 2px 0;
+  }
+  body.entry-mode-wireframe .entry-wireframe-bar,
+  body.entry-mode-both .entry-wireframe-bar {
+    display: inline;
+  }
+  .wf-tag {
+    display: inline-block;
+    font-family: var(--font-serif);
+    font-size: 0.65em;
+    font-weight: 700;
+    line-height: 1.1;
+    padding: 1px;
+    margin: 1px 0;
+    border: 1px solid var(--border-ink);
+    background: var(--bg-paper);
+    color: var(--ink-main);
+    cursor: pointer;
+  }
+
+  /* ==========================================================================
+     6. 屏幕正中央弹出框系统
+     ========================================================================== */
+  .eink-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 14, 12, 0.42);
+    z-index: 80;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 14px;
+  }
+  .eink-overlay.open {
+    display: flex;
+  }
+
+  .eink-modal-card {
+    background: var(--bg-paper);
+    border: 2px solid var(--border-ink);
+    box-shadow: 4px 4px 0 var(--border-ink);
+    width: 100%;
+    max-width: 540px;
+    max-height: 88%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .modal-header {
+    padding: 9px 14px;
+    border-bottom: 1.5px solid var(--border-ink);
+    background: var(--bg-panel);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 700;
+    font-size: 13.5px;
+  }
+
+  .modal-close {
+    padding: 2px 8px;
+    border: 1.5px solid var(--border-ink);
+    background: var(--bg-paper);
+    color: var(--ink-main);
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .modal-body {
+    padding: 12px 15px;
+    overflow-y: auto;
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .cfg-group {
+    margin-bottom: 10px;
+    padding-bottom: 9px;
+    border-bottom: 1px dashed var(--border-soft);
+  }
+  .cfg-group:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+  .cfg-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--ink-muted);
+    margin-bottom: 5px;
+  }
+  .cfg-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+  }
+  .eink-opt-btn {
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1.5px solid var(--border-ink);
+    background: var(--bg-paper);
+    color: var(--ink-main);
+    cursor: pointer;
+  }
+  .eink-opt-btn.active {
+    background: var(--ink-main);
+    color: var(--bg-paper);
+  }
+
+  .typo-ctrl-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .typo-ctrl-table td {
+    padding: 4px 4px;
+    border-bottom: 1px dotted var(--border-soft);
+    vertical-align: middle;
+  }
+  .typo-ctrl-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .study-tabs {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .decision-card-opt {
+    padding: 8px 11px;
+    border: 1.5px solid var(--border-ink);
+    background: var(--bg-panel);
+    margin-bottom: 7px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .decision-card-opt.selected {
+    background: var(--c-vermilion-bg);
+    border-color: var(--c-vermilion);
+    color: var(--c-vermilion);
+  }
+</style>
+</head>
+<body class="frame-7inch dir-vertical vb-mode-interleave show-note-fulltext entry-mode-seal">
+
+<div class="app-shell">
+  <div class="eink-device" id="einkDevice">
+
+    <!-- 顶部 22px 极窄系统微栏 -->
+    <div class="sys-micro-top">
+      <span id="sysTopLeft">《史记》卷七 · 项羽本纪第七</span>
+      <span>
+        <span style="color:var(--c-jijie-fg);font-weight:800;">■集解</span>
+        <span style="color:var(--c-suoyin-fg);font-weight:800;margin-left:4px;">■索隐</span>
+        <span style="color:var(--c-zhengyi-fg);font-weight:800;margin-left:4px;">■正义</span>
+        <span style="color:var(--c-jiaoji-fg);font-weight:800;margin-left:4px;">■校记</span>
+        <span style="color:var(--c-vb-fg);font-weight:800;margin-left:4px;">■双排译</span>
+      </span>
+    </div>
+
+    <!-- 浮动页头菜单 (默认隐藏，点击屏幕中央时出现) -->
+    <header class="floating-hud-top" id="hudTop">
+      <div class="hud-left">
+        <span class="status-seal">读史记</span>
+        <span style="font-weight:700; font-size:13px;" id="hdrChapterTitle">卷七·项羽本纪</span>
+      </div>
+      <div class="hud-right">
+        <button class="micro-btn active" id="btnDirToggle" onclick="quickToggleDirection()">竖排</button>
+        <button class="micro-btn" id="btnVbQuick" onclick="cycleVbMode()">文白:双排穿插</button>
+        <button class="micro-btn" id="btnLangToggle" onclick="quickToggleTrad()">简体</button>
+        <button class="micro-btn accent" onclick="openModal('configModal')">⚙️ 字号/配置</button>
+        <button class="micro-btn" onclick="openModal('hubModal')">☰ 目录</button>
+      </div>
+    </header>
+
+    <!-- 满屏无框流式阅读区 -->
+    <main class="reader-stage" id="readerStage" onclick="handleStageBlankTap(event)">
+      <div class="pane-classical" id="paneClassical"></div>
+      <div class="pane-vernacular-split" id="paneVernacularSplit"></div>
+    </main>
+
+    <!-- 底部 22px 极窄系统微栏 -->
+    <div class="sys-micro-bottom">
+      <span id="sysBotLeft">左边缘:下一屏 · 中央:呼出配置 · 右边缘:上一屏</span>
+      <span id="sysBotRight">点【一】【二】呼出沙盘 · 17:38 🔋96%</span>
+    </div>
+
+    <!-- 浮动页尾翻页与研读栏 (默认隐藏，点击屏幕中央时出现) -->
+    <footer class="floating-hud-bottom" id="hudBottom">
+      <button class="pager-btn" onclick="scrollScreenPage(1)">
+        <span id="lblLeftPage">‹ 下一屏 (左翻)</span>
+      </button>
+      <button class="pager-center-btn" onclick="openParagraphStudyModal(null, 0, 'map')">
+        <span id="lblCenterStudy">◈ 卷内沙盘与决策演武</span>
+      </button>
+      <button class="pager-btn" onclick="scrollScreenPage(-1)">
+        <span id="lblRightPage">上一屏 (右翻) ›</span>
+      </button>
+    </footer>
+
+    <!-- 正中央弹窗 1：停顿分句精解 & 三家注弹窗 -->
+    <div class="eink-overlay" id="clauseModal" onclick="closeModalOnBg(event, 'clauseModal')">
+      <div class="eink-modal-card">
+        <div class="modal-header">
+          <span id="clauseModalTitle">📜 分句精解 · 文白与三家注</span>
+          <button class="modal-close" onclick="closeModal('clauseModal')">关闭 ✕</button>
+        </div>
+        <div class="modal-body" id="clauseModalBody"></div>
+      </div>
+    </div>
+
+    <!-- 正中央弹窗 2：本段研读五合一舱 -->
+    <div class="eink-overlay" id="studyModal" onclick="closeModalOnBg(event, 'studyModal')">
+      <div class="eink-modal-card" style="max-width:550px;">
+        <div class="modal-header">
+          <span id="studyModalTitle">◈ 段落研读与历史推演</span>
+          <button class="modal-close" onclick="closeModal('studyModal')">关闭 ✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="study-tabs" id="studyTabsBar">
+            <button class="eink-opt-btn" data-tab="map" onclick="switchStudyTab('map')">🗺️ 沙盘态势</button>
+            <button class="eink-opt-btn" data-tab="decision" onclick="switchStudyTab('decision')">🎯 决策演武</button>
+            <button class="eink-opt-btn" data-tab="comment" onclick="switchStudyTab('comment')">📖 名家评点</button>
+            <button class="eink-opt-btn" data-tab="db" onclick="switchStudyTab('db')">📚 资料库</button>
+            <button class="eink-opt-btn" data-tab="ancient" onclick="switchStudyTab('ancient')">📜 古本校勘</button>
+          </div>
+          <div id="studyTabContent"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 正中央弹窗 3：人物 / 地名 / 官制名物百科弹窗 -->
+    <div class="eink-overlay" id="entityModal" onclick="closeModalOnBg(event, 'entityModal')">
+      <div class="eink-modal-card" style="max-width:460px;">
+        <div class="modal-header">
+          <span id="entityModalTitle">👤 史记百科</span>
+          <button class="modal-close" onclick="closeModal('entityModal')">关闭 ✕</button>
+        </div>
+        <div class="modal-body" id="entityModalBody"></div>
+      </div>
+    </div>
+
+    <!-- 正中央弹窗 4：阅读配置面板 -->
+    <div class="eink-overlay" id="configModal" onclick="closeModalOnBg(event, 'configModal')">
+      <div class="eink-modal-card" style="max-width:560px;">
+        <div class="modal-header">
+          <span>⚙️ 阅读配置（7寸彩墨屏专版 V6）</span>
+          <button class="modal-close" onclick="closeModal('configModal')">完成 ✕</button>
+        </div>
+        <div class="modal-body">
+          <!-- 1. 正文 / 三家注 / 白话翻译 独立字号与字重调节矩阵 -->
+          <div class="cfg-group">
+            <div class="cfg-label">1. 正文 · 三家注 · 白话译文 独立【字号】与【字重】调节（正粗注细）</div>
+            <table class="typo-ctrl-table">
+              <tr>
+                <td style="font-weight:700; width:78px;">正文原文</td>
+                <td>
+                  <button class="eink-opt-btn" onclick="adjSize('main', -2)">A-</button>
+                  <span id="valSizeMain" style="display:inline-block;width:38px;text-align:center;font-weight:700;">26px</span>
+                  <button class="eink-opt-btn" onclick="adjSize('main', 2)">A+</button>
+                </td>
+                <td>
+                  <button class="eink-opt-btn" id="w-main-400" onclick="setWeight('main', 400)">细</button>
+                  <button class="eink-opt-btn" id="w-main-500" onclick="setWeight('main', 500)">中</button>
+                  <button class="eink-opt-btn active" id="w-main-600" onclick="setWeight('main', 600)">粗</button>
+                  <button class="eink-opt-btn" id="w-main-700" onclick="setWeight('main', 700)">特粗</button>
+                </td>
+              </tr>
+              <tr>
+                <td style="font-weight:700; color:var(--c-jijie-fg);">三家注/校</td>
+                <td>
+                  <button class="eink-opt-btn" onclick="adjSize('note', -1)">A-</button>
+                  <span id="valSizeNote" style="display:inline-block;width:38px;text-align:center;font-weight:700;">20px</span>
+                  <button class="eink-opt-btn" onclick="adjSize('note', 1)">A+</button>
+                </td>
+                <td>
+                  <button class="eink-opt-btn active" id="w-note-400" onclick="setWeight('note', 400)">细</button>
+                  <button class="eink-opt-btn" id="w-note-500" onclick="setWeight('note', 500)">中</button>
+                  <button class="eink-opt-btn" id="w-note-600" onclick="setWeight('note', 600)">粗</button>
+                  <button class="eink-opt-btn" id="w-note-700" onclick="setWeight('note', 700)">特粗</button>
+                </td>
+              </tr>
+              <tr>
+                <td style="font-weight:700; color:var(--c-vb-fg);">双排译文</td>
+                <td>
+                  <button class="eink-opt-btn" onclick="adjSize('vb', -1)">A-</button>
+                  <span id="valSizeVb" style="display:inline-block;width:38px;text-align:center;font-weight:700;">15px</span>
+                  <button class="eink-opt-btn" onclick="adjSize('vb', 1)">A+</button>
+                </td>
+                <td>
+                  <button class="eink-opt-btn active" id="w-vb-400" onclick="setWeight('vb', 400)">细</button>
+                  <button class="eink-opt-btn" id="w-vb-500" onclick="setWeight('vb', 500)">中</button>
+                  <button class="eink-opt-btn" id="w-vb-600" onclick="setWeight('vb', 600)">粗</button>
+                  <button class="eink-opt-btn" id="w-vb-700" onclick="setWeight('vb', 700)">特粗</button>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- 2. 译文与三家注的排列顺序 & 显示控制 -->
+          <div class="cfg-group">
+            <div class="cfg-label">2. 译文与三家注的先后顺序 & 注释显示控制</div>
+            <div class="cfg-row" style="margin-bottom:6px;">
+              <button class="eink-opt-btn active" id="cfgOrderVbFirst" onclick="setNoteVbOrder('vb-first')">顺序A：正文 → 双排译文 → 三家注（推荐）</button>
+              <button class="eink-opt-btn" id="cfgOrderNoteFirst" onclick="setNoteVbOrder('note-first')">顺序B：正文 → 三家注 → 双排译文</button>
+            </div>
+            <div class="cfg-row">
+              <button class="eink-opt-btn active" id="cfgNoteReminder" onclick="toggleNoteReminder(this)">显示〔集解/索隐〕角标</button>
+              <button class="eink-opt-btn active" id="cfgNoteFull" onclick="toggleNoteFulltext(this)">展开注释全文</button>
+              <button class="eink-opt-btn active" id="cfgNoteBg" onclick="toggleNoteBg(this)">注释与译文带底色</button>
+            </div>
+          </div>
+
+          <!-- 3. 文白对照模式 -->
+          <div class="cfg-group">
+            <div class="cfg-label">3. 文言 + 白话译文对照模式</div>
+            <div class="cfg-row">
+              <button class="eink-opt-btn active" id="cfgVbInterleave" onclick="setVbMode('interleave')">行内小字双排译文（正文居两列正中）</button>
+              <button class="eink-opt-btn" id="cfgVbPopup" onclick="setVbMode('popup')">纯文言 + 点分句正中弹窗译文</button>
+              <button class="eink-opt-btn" id="cfgVbSplit" onclick="setVbMode('split')">同屏上下双栏对照</button>
+              <button class="eink-opt-btn" id="cfgVbNone" onclick="setVbMode('none')">仅显纯文言</button>
+            </div>
+          </div>
+
+          <!-- 4. 生卒年与横排拼音 -->
+          <div class="cfg-group">
+            <div class="cfg-label">4. 辅助标注与段落扩展入口</div>
+            <div class="cfg-row">
+              <button class="eink-opt-btn active" id="cfgShowLifespan" onclick="toggleLifespanShow(this)">显示生卒年</button>
+              <button class="eink-opt-btn active" id="cfgShowPinyin" onclick="togglePinyinShow(this)">横排拼音</button>
+              <button class="eink-opt-btn active" id="cfgEntrySeal" onclick="setEntryMode('seal')">仅段首【一】【二】触发</button>
+              <button class="eink-opt-btn" id="cfgEntryBoth" onclick="setEntryMode('both')">附段尾 [图][策]</button>
+            </div>
+          </div>
+
+          <!-- 5. 排版方向、标点、简繁、色彩模式 -->
+          <div class="cfg-group">
+            <div class="cfg-label">5. 排版方向、简繁、字体与彩墨显色</div>
+            <div class="cfg-row">
+              <button class="eink-opt-btn active" id="cfgDirVert" onclick="setDirection('vertical')">竖排</button>
+              <button class="eink-opt-btn" id="cfgDirHoriz" onclick="setDirection('horizontal')">横排</button>
+              <button class="eink-opt-btn active" id="cfgLangSimp" onclick="setLanguage('simp')">简体</button>
+              <button class="eink-opt-btn" id="cfgLangTrad" onclick="setLanguage('trad')">繁體</button>
+              <button class="eink-opt-btn active" id="cfgFontSong" onclick="setReaderFont('song')">老宋</button>
+              <button class="eink-opt-btn" id="cfgFontKai" onclick="setReaderFont('kai')">文楷</button>
+              <button class="eink-opt-btn active" id="cfgThemeColor" onclick="setEinkTheme('color')">彩墨屏</button>
+              <button class="eink-opt-btn" id="cfgThemeBw" onclick="setEinkTheme('bw')">黑白</button>
+              <button class="eink-opt-btn" id="cfgThemeDark" onclick="setEinkTheme('dark')">夜间</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 正中央弹窗 5：全局目录与工具收纳舱 -->
+    <div class="eink-overlay" id="hubModal" onclick="closeModalOnBg(event, 'hubModal')">
+      <div class="eink-modal-card" style="max-width:540px;">
+        <div class="modal-header">
+          <span>☰ 《读史记》卷目切换与工具舱</span>
+          <button class="modal-close" onclick="closeModal('hubModal')">关闭 ✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="cfg-label">点击切换当前精读卷目（整卷多段连续满屏）</div>
+          <div class="cfg-row" id="hubChapterList" style="margin-bottom:12px;"></div>
+          <div id="hubSubViewBox" style="border-top:1px solid var(--border-soft); padding-top:10px; font-size:13px;">
+            <p><strong>💡 彩墨屏高对比三家注图例</strong>：</p>
+            <p>• <strong style="color:var(--c-jijie-fg);">〔集解〕— 宝蓝色</strong>：南朝宋裴骃《史记集解》</p>
+            <p>• <strong style="color:var(--c-suoyin-fg);">〔索隐〕— 深翠绿</strong>：唐司马贞《史记索隐》</p>
+            <p>• <strong style="color:var(--c-zhengyi-fg);">〔正义〕— 朱砂红</strong>：唐张守节《史记正义》</p>
+            <p>• <strong style="color:var(--c-jiaoji-fg);">〔校记〕— 紫棠色</strong>：北宋景祐本、南宋黄善夫本异文校勘</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// 1. 简繁字典与排版辅助函数
+// ============================================================================
+const SIMP_TO_TRAD_MAP = {
+  "读":"讀","史":"史","记":"記","卷":"卷","项":"項","羽":"羽","本":"本","纪":"紀","第":"第","霸":"霸","王":"王","崛":"崛","起":"起",
+  "籍":"籍","者":"者","下":"下","相":"相","人":"人","也":"也","字":"字","初":"初","时":"時","年":"年","其":"其","季":"季","父":"父",
+  "梁":"梁","即":"即","楚":"楚","将":"將","燕":"燕","为":"為","秦":"秦","翦":"翦","所":"所","戮":"戮","世":"世","封":"封","于":"於",
+  "故":"故","姓":"姓","氏":"氏","少":"少","学":"學","书":"書","不":"不","成":"成","去":"去","剑":"劍","又":"又","怒":"怒","之":"之",
+  "曰":"曰","足":"足","以":"以","名":"名","而":"而","已":"已","一":"一","敌":"敵","万":"萬","是":"是","乃":"乃","教":"教","兵":"兵",
+  "法":"法","大":"大","喜":"喜","略":"略","知":"知","意":"意","肯":"肯","竟":"竟","始":"始","皇":"皇","帝":"帝","游":"遊","会":"會",
+  "稽":"稽","渡":"渡","浙":"浙","江":"江","与":"與","俱":"俱","观":"觀","彼":"彼","可":"可","取":"取","代":"代","掩":"掩","口":"口",
+  "毋":"毋","妄":"妄","言":"言","族":"族","矣":"矣","此":"此","奇":"奇","长":"長","八":"八","尺":"尺","余":"餘","力":"力","能":"能",
+  "扛":"扛","鼎":"鼎","才":"才","气":"氣","过":"過","虽":"雖","吴":"吳","中":"中","子":"子","弟":"弟","皆":"皆","惮":"憚","杀":"殺",
+  "卿":"卿","冠":"冠","军":"軍","威":"威","震":"震","国":"國","闻":"聞","诸":"諸","侯":"侯","遣":"遣","当":"當","阳":"陽","君":"君",
+  "蒲":"蒲","卒":"卒","河":"河","救":"救","巨":"巨","鹿":"鹿","战":"戰","利":"利","陈":"陳","复":"復","请":"請","悉":"悉","引":"引",
+  "沉":"沉","船":"船","破":"破","釜":"釜","甑":"甑","烧":"燒","庐":"廬","舍":"舍","持":"持","三":"三","日":"日","粮":"糧","示":"示",
+  "士":"士","必":"必","死":"死","无":"無","还":"還","心":"心","至":"至","则":"則","围":"圍","离":"離","遇":"遇","九":"九","绝":"絕",
+  "甬":"甬","道":"道","苏":"蘇","角":"角","虏":"虜","涉":"涉","间":"間","降":"降","自":"自","壁":"壁","莫":"莫","敢":"敢","纵":"縱",
+  "及":"及","击":"擊","从":"從","上":"上","呼":"呼","声":"聲","动":"動","天":"天","惴":"惴","恐":"恐","召":"召","见":"見","入":"入",
+  "辕":"轅","门":"門","膝":"膝","行":"行","前":"前","仰":"仰","视":"視","由":"由","属":"屬","焉":"焉","沛":"沛","公":"公","旦":"旦",
+  "百":"百","骑":"騎","来":"來","鸿":"鴻","谢":"謝","臣":"臣","戮":"勠","攻":"攻","北":"北","南":"南","然":"然","先":"先","关":"關",
+  "得":"得","今":"今","有":"有","小":"小","令":"令","卻":"卻","左":"左","司":"司","马":"馬","曹":"曹","伤":"傷","何":"何","因":"因",
+  "留":"留","饮":"飲","东":"東","向":"嚮","坐":"坐","亚":"亞","范":"范","增":"增","张":"張","良":"良","西":"西","侍":"侍","数":"數",
+  "目":"目","举":"舉","佩":"佩","玉":"玉","玦":"玦","默":"默","应":"應","出":"出","庄":"莊","谓":"謂","忍":"忍","若":"若","寿":"壽",
+  "毕":"畢","舞":"舞","属":"屬","且":"且","诺":"諾","拔":"拔","常":"常","身":"身","翼":"翼","蔽":"蔽","樊":"樊","哙":"噲","事":"事",
+  "如":"如","甚":"甚","急":"急","迫":"迫","同":"同","命":"命","带":"帶","拥":"擁","盾":"盾","交":"交","戟":"戟","卫":"衛","欲":"欲",
+  "止":"止","内":"內","侧":"側","撞":"撞","仆":"仆","地":"地","遂":"遂","披":"披","帷":"帷","立":"立","瞋":"瞋","头":"頭","发":"髮",
+  "指":"指","眦":"眥","尽":"盡","裂":"裂","按":"按","跽":"跽","客":"客","参":"驂","乘":"乘","壮":"壯","赐":"賜","卮":"卮","酒":"酒",
+  "斗":"斗","拜":"拜","彘":"彘","肩":"肩","生":"生","覆":"覆","加":"加","切":"切","啖":"啖","辞":"辭","夫":"夫","虎":"虎","狼":"狼",
+  "刑":"刑","胜":"勝","叛":"叛","怀":"懷","约":"約","咸":"咸","毫":"毫","毛":"毛","近":"近","闭":"閉","宫":"宮","室":"室","待":"待",
+  "守":"守","备":"備","他":"他","盗":"盜","非":"非","劳":"勞","苦":"苦","功":"功","高":"高","未":"未","赏":"賞","听":"聽","细":"細",
+  "说":"說","诛":"誅","亡":"亡","续":"續","耳":"耳","窃":"竊","垓":"垓","食":"食","汉":"漢","重":"重","夜":"夜","四":"四","面":"面",
+  "歌":"歌","惊":"驚","多":"多","帐":"帳","美":"美","虞":"虞","幸":"幸","骏":"駿","骓":"騅","悲":"悲","慷":"慷","慨":"慨","诗":"詩",
+  "盖":"蓋","逝":"逝","奈":"奈","阕":"闋","和":"和","泣":"泣","乌":"烏","亭":"亭","檥":"檥","方":"方","千":"千","里":"里","众":"眾",
+  "愿":"願","独":"獨","笑":"笑","兄":"兄","怜":"憐","愧":"愧","五":"五","岁":"歲","尝":"嘗","步":"步","短":"短","接":"接","被":"被",
+  "创":"創","顾":"顧","吕":"呂","童":"童","翳":"翳","购":"購","金":"金","邑":"邑","户":"戶","德":"德","刎":"刎","太":"太","周":"周",
+  "舜":"舜","瞳":"瞳","岂":"豈","苗":"裔","兴":"興","暴":"暴","失":"失","政":"政","难":"難","豪":"豪","杰":"傑","蜂":"蜂","争":"爭",
+  "尺":"尺","寸":"寸","势":"勢","陇":"隴","亩":"畝","分":"分","背":"背","放":"放","逐":"逐","义":"義","怨":"怨","矜":"矜","伐":"伐",
+  "奋":"奮","私":"私","智":"智","师":"師","古":"古","业":"業","征":"徵","经":"經","营":"營","城":"城","尚":"尚","觉":"覺","寤":"寤",
+  "责":"責","引":"引","罪":"罪","谬":"謬","哉":"哉","集":"集","解":"解","索":"索","隐":"隱","正":"正","校":"校","记":"記"
+};
+
+const HAN_NUMS = ["〇","一","二","三","四","五","六","七","八","九","十"];
+function toHanNum(n) {
+  if (n <= 10) return HAN_NUMS[n];
+  return String(n).replace(/[0-9]/g, d => HAN_NUMS[parseInt(d, 10)]);
+}
+
+function convertTextToTrad(str) {
+  if (!str) return str;
+  return str.replace(/(<[^>]+>)|([^<]+)/g, (match, tag, text) => {
+    if (tag) return tag;
+    let out = "";
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      out += SIMP_TO_TRAD_MAP[ch] || ch;
+    }
+    return out;
+  });
+}
+
+function transformPunctuation(str, isVertical, punctStyle) {
+  if (!str) return str;
+  return str.replace(/(<[^>]+>)|([^<]+)/g, (match, tag, text) => {
+    if (tag) return tag;
+    let t = text;
+    if (punctStyle === "judou") {
+      t = t.replace(/[，；：]/g, "、").replace(/[？！]/g, "。").replace(/[“”『』「」‘’]/g, "");
+    } else if (isVertical) {
+      let openD = true;
+      t = t.replace(/[“”]/g, () => { const r = openD ? "「" : "」"; openD = !openD; return r; });
+      let openS = true;
+      t = t.replace(/[‘’]/g, () => { const r = openS ? "『" : "』"; openS = !openS; return r; });
+    }
+    return t.replace(/([，。；：？！、「」『』])/g, '<span class="punct-char">$1</span>');
+  });
+}
+
+function pName(key, label, life) {
+  const lifeText = state.direction === "vertical"
+    ? toHanNum(life).replace(/-/g, "—")
+    : life;
+  return `<span class="person-wrap" onclick="openEntityModal(event, 'person', '${key}')"><span class="person-name">${label}</span><span class="lifespan-tag">${lifeText}</span></span>`;
+}
+
+function placeBox(key, label) {
+  return `<span class="place-box" onclick="openEntityModal(event, 'place', '${key}')">${label}</span>`;
+}
+
+function termBox(key, label) {
+  return `<span class="term-box" onclick="openEntityModal(event, 'term', '${key}')">${label}</span>`;
+}
+
+function hzPy(char, py) {
+  return `<span class="hz-ruby"><span class="hz-ruby-py">${py}</span>${char}</span>`;
+}
+
+const NOTE_TYPE_CLASS = {
+  "集解": "type-jijie",
+  "索隐": "type-suoyin",
+  "正义": "type-zhengyi",
+  "校记": "type-jiaoji"
+};
+
+function noteSpan(type, text, hasMapArrow, pIdx, cIdx) {
+  const arrowHtml = hasMapArrow ? `<span class="note-reminder-arrow">➤</span>` : "";
+  const colorCls = NOTE_TYPE_CLASS[type] || "type-jijie";
+  return `<span class="note-wrap-inline ${colorCls}" onclick="openClauseModal(event, ${pIdx}, ${cIdx})"><span class="note-reminder-tag">〔${type}${arrowHtml}〕</span><span class="note-mid-sep">—</span><span class="note-full-inline">${text}</span></span>`;
+}
+
+function buildDoubleRowVernacular(vText, pIdx, cIdx) {
+  const clean = vText.trim();
+  const mid = Math.ceil(clean.length / 2);
+  const col1 = clean.slice(0, mid);
+  const col2 = clean.slice(mid);
+  return `<span class="interleaved-vb" onclick="onClauseTap(event, ${pIdx}, ${cIdx})"><span class="vb-subcol">${fmt(col1)}</span><span class="vb-subcol">${fmt(col2)}</span></span>`;
+}
+
+// ============================================================================
+// 2. 人物、地名、名物、沙盘、决策数据库
+// ============================================================================
+const ENTITIES_DB = {
+  person: {
+    "项羽": { title: "项籍（字羽 · 前232—前202）", role: "西楚霸王 · 卷七《项羽本纪》", desc: "下相人，楚名将项燕之孙。力能扛鼎，才气过人。巨鹿之战破釜沉舟九战破秦；鸿门宴不忍杀沛公；垓下悲歌，乌江自刎。" },
+    "项梁": { title: "项梁（？—前208）", role: "楚上柱国 · 武信君", desc: "项燕之子，项羽叔父。吴中举兵反秦，立楚怀王孙心，后于定陶之战轻敌为章邯所袭杀。" },
+    "秦始皇": { title: "秦始皇嬴政（前259—前210）", role: "始皇帝 · 卷六《秦始皇本纪》", desc: "吞并六国，废分封行郡县，书同文车同轨。三十七年东游会稽渡浙江，项羽观之曰“彼可取而代也”。" },
+    "刘邦": { title: "刘邦（字季 · 前256—前195）", role: "汉太祖高皇帝 · 卷八《高祖本纪》", desc: "起于沛公，先破秦入咸阳，还军霸上约法三章。鸿门宴全身而退，终灭项羽建汉。" },
+    "范增": { title: "范增（亚父 · 前277—前204）", role: "西楚霸王谋主", desc: "居鄛人，年七十好奇计。鸿门宴三举玉玦示意杀刘邦不果，叹曰“夺项王天下者必沛公也”。" },
+    "张良": { title: "张良（字子房 · ？—前186）", role: "留侯 · 汉初三杰", desc: "五世相韩，鸿门宴西向侍，召樊哙入帐救护刘邦，运筹帷幄之中，决胜千里之外。" },
+    "樊哙": { title: "樊哙（前242—前189）", role: "舞阳侯 · 汉初猛将", desc: "鸿门宴带剑拥盾闯帐，瞋目视项王，头发上指，目眦尽裂，立饮斗酒生啖彘肩。" },
+    "舜": { title: "虞舜（重华 · 约前2287—前2188）", role: "五帝之一 · 卷一《五帝本纪》", desc: "传说目有重瞳子，受尧禅让为天子。太史公以舜之重瞳对比项羽之重瞳。" },
+    "司马迁": { title: "司马迁（字子长 · 前145—约前86）", role: "西汉太史令 · 《史记》作者", desc: "生于龙门，二十南游江淮，遭李陵之祸后发愤著成《史记》百三十篇。" }
+  },
+  place: {
+    "下相": { title: "【地名】下相（今江苏宿迁西北）", role: "秦置下相县，属泗水郡", desc: "《读史方舆纪要》：下相故城在宿迁县西北七里，本楚旧邑，项羽生于此。" },
+    "会稽": { title: "【地名】会稽郡（治今江苏苏州/浙江绍兴）", role: "秦三十六郡之一", desc: "秦始皇三十七年东巡会稽，渡浙江；项梁、项羽叔侄即于会稽郡吴中起兵。" },
+    "巨鹿": { title: "【地名】巨鹿（今河北平乡西南）", role: "巨鹿之战核心战场", desc: "秦将王离二十万军围赵王歇于巨鹿城，项羽渡漳水破釜沉舟，九战绝其甬道大破秦军处。" },
+    "鸿门": { title: "【地名】新丰鸿门（今陕西临潼东十七里）", role: "鸿门宴所在地", desc: "项羽四十万大军入函谷关后驻军新丰鸿门，距刘邦霸上军营四十里。" },
+    "霸上": { title: "【地名】霸上（今陕西西安东霸陵原）", role: "刘邦驻军处", desc: "沛公破秦入咸阳后，封宫室还军霸上，以待项王。" },
+    "垓下": { title: "【地名】垓下（今安徽灵璧东南五十里）", role: "楚汉决战之地", desc: "汉五年，刘邦会合韩信、彭越、英布围项羽于垓下，夜闻四面楚歌处。" },
+    "乌江": { title: "【地名】乌江浦（今安徽和县东北四十里长江岸）", role: "乌江亭长檥船处", desc: "项羽突围至乌江，笑谓亭长“天之亡我，我何渡为”，遂自刎于此。" }
+  },
+  term: {
+    "万人敌": { title: "【名物】万人敌（兵法韬略）", role: "兵家术语", desc: "《史记正义》：剑术不过抵敌一人；兵法韬略可统率三军、克敌于千里之外，故称万人敌。" },
+    "卿子冠军": { title: "【官号】卿子冠军（上将军宋义尊号）", role: "楚怀王所封上将军", desc: "《史记集解》文颖曰：卿子，时人相褒尊之辞，犹言公子；上将故言冠军。" },
+    "参乘": { title: "【官制】参乘（骖乘 · 车右护卫）", role: "古乘车礼制", desc: "古时乘车，尊者居左，御者居中，武士居右护卫以备非常，称为参乘（骖乘）。" },
+    "重瞳子": { title: "【异相】重瞳子（一目双眸）", role: "古代圣王异相", desc: "《尚书大传》及孔安国云：虞舜目有两眸子，项羽亦重瞳子。" }
+  }
+};
+
+const SANDBOX_DB = {
+  "julu_map": {
+    title: "巨鹿之战（前207年）破釜沉舟态势图",
+    desc: "项羽杀宋义夺军权，悉引兵渡漳水，沉船破釜烧庐舍，持三日粮，先绝章邯输粟王离之甬道，九战大破秦军。",
+    svg: `<svg viewBox="0 0 500 210" style="width:100%; height:auto; border:1.5px solid var(--border-ink); background:var(--bg-paper);">
+      <path d="M 15 175 Q 160 140 310 160 T 485 125" fill="none" stroke="var(--c-jijie-fg)" stroke-width="8"/>
+      <text x="125" y="196" fill="var(--c-jijie-fg)" font-size="11.5" font-weight="bold">漳水（渡河沉船破釜处）</text>
+      <rect x="210" y="34" width="80" height="46" fill="var(--c-ochre-bg)" stroke="var(--border-ink)" stroke-width="2"/>
+      <text x="250" y="56" fill="var(--ink-main)" font-size="12" font-weight="bold" text-anchor="middle">巨鹿城</text>
+      <text x="250" y="71" fill="var(--ink-muted)" font-size="9.5" text-anchor="middle">赵王歇被围</text>
+      <circle cx="250" cy="57" r="46" fill="none" stroke="var(--c-vermilion)" stroke-width="2" stroke-dasharray="5,4"/>
+      <line x1="250" y1="103" x2="380" y2="114" stroke="var(--c-vermilion)" stroke-width="3" stroke-dasharray="4,3"/>
+      <rect x="365" y="92" width="110" height="34" fill="var(--c-vermilion-bg)" stroke="var(--c-vermilion)" stroke-width="1.5"/>
+      <text x="420" y="113" fill="var(--c-vermilion)" font-size="10.5" font-weight="bold" text-anchor="middle">章邯筑甬道输粟</text>
+      <rect x="25" y="36" width="102" height="40" fill="var(--bg-panel)" stroke="var(--border-ink)" stroke-width="1.5"/>
+      <text x="76" y="55" fill="var(--ink-main)" font-size="10.5" font-weight="bold" text-anchor="middle">诸侯援军十余壁</text>
+      <text x="76" y="69" fill="var(--ink-muted)" font-size="9.5" text-anchor="middle">作壁上观</text>
+      <line x1="170" y1="154" x2="305" y2="110" stroke="var(--c-vermilion)" stroke-width="3.5"/>
+      <circle cx="170" cy="154" r="5" fill="var(--c-vermilion)"/>
+      <text x="155" y="138" fill="var(--c-vermilion)" font-size="11" font-weight="bold">★ 项羽主力截断甬道</text>
+    </svg>`
+  },
+  "hongmen_map": {
+    title: "鸿门宴室内礼制座次与军帐态势图（前206年）",
+    desc: "古礼室内以东向为最尊：项王、项伯东向坐；亚父范增南向坐（次尊）；沛公刘邦北向坐（臣位）；张良西向侍；樊哙自东侧带剑拥盾闯帐。",
+    svg: `<svg viewBox="0 0 500 205" style="width:100%; height:auto; border:1.5px solid var(--border-ink); background:var(--bg-paper);">
+      <rect x="20" y="12" width="460" height="180" fill="var(--bg-panel)" stroke="var(--border-ink)" stroke-width="2"/>
+      <text x="250" y="32" fill="var(--ink-main)" font-size="11.5" font-weight="bold" text-anchor="middle">【鸿门军帐室内座次图】（上北下南 · 左西右东）</text>
+      <rect x="42" y="68" width="110" height="68" fill="var(--c-vermilion-bg)" stroke="var(--c-vermilion)" stroke-width="2"/>
+      <text x="97" y="94" fill="var(--c-vermilion)" font-size="12" font-weight="bold" text-anchor="middle">项王 · 项伯</text>
+      <text x="97" y="112" fill="var(--ink-main)" font-size="10" text-anchor="middle">【东向坐·最尊】</text>
+      <rect x="192" y="42" width="116" height="44" fill="var(--c-ochre-bg)" stroke="var(--c-ochre)" stroke-width="1.5"/>
+      <text x="250" y="62" fill="var(--c-ochre)" font-size="11" font-weight="bold" text-anchor="middle">亚父 · 范增</text>
+      <text x="250" y="78" fill="var(--ink-main)" font-size="9.5" text-anchor="middle">【南向坐】三举玉玦</text>
+      <rect x="192" y="134" width="116" height="44" fill="var(--c-suoyin-bg)" stroke="var(--c-suoyin-fg)" stroke-width="1.5"/>
+      <text x="250" y="154" fill="var(--c-suoyin-fg)" font-size="11" font-weight="bold" text-anchor="middle">沛公 · 刘邦</text>
+      <text x="250" y="170" fill="var(--ink-main)" font-size="9.5" text-anchor="middle">【北向坐】如厕间行</text>
+      <rect x="345" y="68" width="115" height="68" fill="var(--c-jijie-bg)" stroke="var(--c-jijie-fg)" stroke-width="1.5"/>
+      <text x="402" y="92" fill="var(--c-jijie-fg)" font-size="11" font-weight="bold" text-anchor="middle">张良【西向侍】</text>
+      <text x="402" y="112" fill="var(--c-vermilion)" font-size="10.5" font-weight="bold" text-anchor="middle">⚡ 樊哙拥盾闯帐</text>
+    </svg>`
+  }
+};
+
+const DECISION_DB = {
+  "julu_songyi": {
+    title: "巨鹿危急而宋义留安阳四十六日不进，次将项羽当如何抉择？",
+    context: "秦将王离急围巨鹿，宋义欲“承秦之弊”，饮酒高会而士卒冻饥：",
+    options: [
+      { label: "A. 遵从宋义将令，继续驻留安阳观望", result: "【推演】巨鹿若破，章邯、王离四十万秦军合流，诸侯军必溃散。" },
+      { label: "B. 晨朝宋义于帐中斩之，渡漳水破釜沉舟（历史真实抉择）", result: "【史实】项羽斩宋义，沉船破釜持三日粮，九战绝甬道虏王离，始为诸侯上将军！" }
+    ]
+  },
+  "hongmen": {
+    title: "鸿门宴上范增三举玉玦示意击杀沛公，项王当如何决断？",
+    context: "沛公先入咸阳欲王关中，范增言其有天子气，急击勿失；宴上沛公卑辞谢罪：",
+    options: [
+      { label: "A. 采纳范增之计，席间立诛刘邦", result: "【推演】虽除心腹大患，然违怀王之约且杀亲来谢罪之客，诸侯或人人自危。" },
+      { label: "B. 顾念贵族信义，默然不应（历史真实抉择）", result: "【史实】项王为人不忍，默然不应；刘邦借如厕间行归霸上，范增叹“夺项王天下者必沛公也”。" }
+    ]
+  }
+};
+
+// ============================================================================
+// 3. 停顿符号（逗号、分号、冒号、句号）切分的精细化章节数据
+// ============================================================================
+function getChaptersData() {
+  return {
+    "xiangyu": {
+      id: "xiangyu",
+      vol: "卷七",
+      title: "项羽本纪第七",
+      paragraphs: [
+        {
+          idx: 1,
+          topic: "少年霸王：彼可取而代也",
+          sandboxKey: "julu_map",
+          decisionKey: "julu_songyi",
+          commentary: "【茅坤《史记钞》】太史公写项羽开篇便有千钧之力，“彼可取而代也”六字，写出少年霸王吞吐天地之概，与高祖“大丈夫当如此也”遥相呼应。",
+          dbText: "【读史方舆纪要·淮安府】下相故城在宿迁县西北七里，本楚旧邑，秦置下相县，项羽即下相人也。",
+          ancientText: "【北宋景祐本】作“籍長八尺餘，力能扛鼎”，【南宋黄善夫三家注本】合刻裴骃集解、司马贞索隐于下。",
+          clauses: [
+            { c: () => `<span class="para-lead-bold">${pName('项羽','项籍','前232-前202')}者，</span>`, v: "项籍这个人，", note: "" },
+            { c: () => `${placeBox('下相','下相')}人也，`, v: "是下相县人，", note: "地理志临淮有下相县。应劭曰：相水之下流，故曰下相。", noteType: "集解" },
+            { c: () => `字羽。`, v: "表字叫羽。", note: "系本云项氏本姬姓，封于项，故姓项氏。", noteType: "索隐" },
+            { c: () => `初起时，`, v: "当初起兵反秦时，", note: "" },
+            { c: () => `年二十四。`, v: "年纪才二十四岁。", note: "" },
+            { c: () => `其季父${pName('项梁','项梁','?-前208')}，`, v: "他的叔父是项梁，", note: "" },
+            { c: () => `梁父即楚将项燕，`, v: "梁父即楚名将项燕，", note: "" },
+            { c: () => `为秦将王翦所戮者也。`, v: "即被秦将王翦杀害者。", note: "" },
+            { c: () => `项籍少时，`, v: "项籍年少的时候，", note: "" },
+            { c: () => `学书不成，`, v: "读书识字没学成，", note: "" },
+            { c: () => `去学剑，`, v: "便弃文去学击剑，", note: "" },
+            { c: () => `又不成。`, v: "又没有学成。", note: "" },
+            { c: () => `项梁怒之。`, v: "项梁对他很生气。", note: "" },
+            { c: () => `籍曰：`, v: "项籍回答说：", note: "" },
+            { c: () => `“书足以记名姓而已。`, v: "读书只够记姓名罢了。", note: "" },
+            { c: () => `剑一人敌，`, v: "击剑只能抵挡一人，", note: "" },
+            { c: () => `不足学，`, v: "不值得深入学习，", note: "" },
+            { c: () => `学${termBox('万人敌','万人敌')}。”`, v: "要学抵敌万人的兵法！", note: "万人敌，谓兵法韬略，可统三军克敌于千里之外。", noteType: "正义" },
+            { c: () => `${pName('秦始皇','秦始皇帝','前259-前210')}游${placeBox('会稽','会稽')}，`, v: "秦始皇巡游会稽郡，", note: "徐广曰：秦始皇三十七年东游会稽。", noteType: "集解" },
+            { c: () => `渡浙江，`, v: "渡过钱塘江的时候，", note: "" },
+            { c: () => `梁与籍俱观。`, v: "项梁与项籍一同观看。", note: "" },
+            { c: () => `籍曰：`, v: "项籍脱口说道：", note: "" },
+            { c: () => `“彼可取而代也。”`, v: "那个人我可以取代他！", note: "景祐本、黄善夫本皆作「彼可取而代也」。", noteType: "校记" },
+            { c: () => `梁掩其口，`, v: "项梁急忙捂住他的嘴，", note: "" },
+            { c: () => `曰：“毋妄言，`, v: "警告说：不要胡乱说话，", note: "" },
+            { c: () => `族矣！”`, v: "这是要招致灭族的！", note: "" },
+            { c: () => `梁以此奇籍。`, v: "项梁因此认为他奇伟。", note: "" },
+            { c: () => `籍长八尺余，`, v: "项籍身高八尺有余，", note: "" },
+            { c: () => `力能扛鼎，`, v: "力大能够举起巨鼎，", note: "" },
+            { c: () => `才气过人，`, v: "才气远远超过常人，", note: "" },
+            { c: () => `虽吴中子弟皆已惮籍矣。`, v: "吴中子弟都十分敬畏他。", note: "" }
+          ]
+        },
+        {
+          idx: 2,
+          topic: "巨鹿之战：破釜沉舟",
+          sandboxKey: "julu_map",
+          decisionKey: "julu_songyi",
+          commentary: "【王夫之《读通鉴论》】巨鹿之战，项氏兴亡之枢机也。破釜沉舟，置之死地而后生，深合孙武《九地》“焚舟破釜，若驱群羊”之旨。",
+          dbText: "【读史方舆纪要·顺德府】巨鹿故城即秦巨鹿郡治，章邯围赵于巨鹿，项羽渡漳水救赵大破秦军处。",
+          ancientText: "【北宋景祐本】“皆沉船，破釜甑，燒廬舍，持三日糧，以示士卒必死，無一還心。”",
+          clauses: [
+            { c: () => `<span class="para-lead-bold">${pName('项羽','项羽','前232-前202')}已杀</span>${termBox('卿子冠军','卿子冠军')}，`, v: "项羽斩杀卿子冠军宋义，", note: "文颖曰：卿子，褒尊之辞；上将故言冠军，即宋义也。", noteType: "集解" },
+            { c: () => `威震楚国，`, v: "威名震动整个楚国，", note: "" },
+            { c: () => `名闻诸侯。`, v: "声名传遍各路诸侯。", note: "" },
+            { c: () => `乃遣当阳君、蒲将军将卒二万渡河，`, v: "派英布蒲将军渡漳河，", note: "" },
+            { c: () => `救${placeBox('巨鹿','巨鹿')}。`, v: "率二万士卒救援巨鹿。", note: "巨鹿郡城，时赵王歇与张耳为秦将王离所围。", noteType: "正义", hasMap: true },
+            { c: () => `战少利，`, v: "初战只取得微小胜利，", note: "" },
+            { c: () => `陈余复请兵。`, v: "陈余再次请求增兵。", note: "" },
+            { c: () => `项羽乃悉引兵渡河，`, v: "项羽遂统率全军渡河，", note: "" },
+            { c: () => `皆沉船，`, v: "下令把渡船全部凿沉，", note: "" },
+            { c: () => `破釜${hzPy('甑','zèng')}，`, v: "砸碎做饭的锅碗陶甑，", note: "釜，锅也；甑，炊器也。沉船破釜，示必死无还心。", noteType: "索隐" },
+            { c: () => `烧庐舍，`, v: "烧毁驻扎的营帐房舍，", note: "" },
+            { c: () => `持三日粮，`, v: "全军只带三天的干粮，", note: "" },
+            { c: () => `以示士卒必死，`, v: "向全体士卒昭示必死，", note: "" },
+            { c: () => `无一还心。`, v: "绝无一丝生还退却之心。", note: "" },
+            { c: () => `于是至则围王离，`, v: "抵达后立即反包围王离，", note: "" },
+            { c: () => `与秦军遇，`, v: "与秦军主力正面交锋，", note: "" },
+            { c: () => `九战，`, v: "连续展开九次激战，", note: "" },
+            { c: () => `绝其甬道，`, v: "截断秦军运粮的甬道，", note: "章邯自棘原筑两垣夹道输粟王离，项羽先绝其粮道。", noteType: "正义", hasMap: true },
+            { c: () => `大破之，`, v: "彻底击溃二十万秦军，", note: "" },
+            { c: () => `杀苏角，`, v: "斩杀秦军将领苏角，", note: "" },
+            { c: () => `虏王离。`, v: "活捉秦军统帅王离。", note: "" },
+            { c: () => `及楚击秦，`, v: "当楚军猛攻秦军之时，", note: "" },
+            { c: () => `诸将皆从壁上观。`, v: "诸侯将领皆在壁垒观战。", note: "" },
+            { c: () => `楚战士无不一以当十，`, v: "楚军战士无不以一当十，", note: "" },
+            { c: () => `楚兵呼声动天，`, v: "呐喊厮杀声震天动地，", note: "" },
+            { c: () => `诸侯军无不人人${hzPy('惴','zhuì')}恐。`, v: "观战诸侯军人人战栗。", note: "" },
+            { c: () => `于是已破秦军，`, v: "打垮秦军主力之后，", note: "" },
+            { c: () => `项羽召见诸侯将，`, v: "项羽传令召见诸侯将领，", note: "" },
+            { c: () => `入辕门，`, v: "诸将进入楚军辕门时，", note: "" },
+            { c: () => `无不膝行而前，`, v: "全都双膝跪地爬行上前，", note: "" },
+            { c: () => `莫敢仰视。`, v: "没有一人敢抬头仰视。", note: "" },
+            { c: () => `项羽由是始为诸侯上将军，`, v: "项羽自此为诸侯上将军，", note: "" },
+            { c: () => `诸侯皆属焉。`, v: "各路诸侯全都归附听命。", note: "" }
+          ]
+        },
+        {
+          idx: 3,
+          topic: "鸿门宴：项庄舞剑与樊哙闯帐",
+          sandboxKey: "hongmen_map",
+          decisionKey: "hongmen",
+          commentary: "【苏轼《范增论》】鸿门之会，仅二十余字座次描写，将项羽之自矜、范增之焦灼、刘邦之隐忍、张良之从容刻画殆尽。",
+          dbText: "【读史方舆纪要·临潼县】鸿门坂在临潼县东十七里，沛公自霸上从百余骑来见项王于此。",
+          ancientText: "【南宋黄善夫本】“項王、項伯東嚮坐；亞父南嚮坐；沛公北嚮坐；張良西嚮侍。”",
+          clauses: [
+            { c: () => `<span class="para-lead-bold">${pName('刘邦','沛公','前256-前195')}旦日</span>从百余骑来见${pName('项羽','项王','前232-前202')}，`, v: "沛公次日率百余骑见项王，", note: "" },
+            { c: () => `至${placeBox('鸿门','鸿门')}，`, v: "抵达新丰鸿门楚军大营，", note: "鸿门在新丰县东十七里，距霸上四十里。", noteType: "正义", hasMap: true },
+            { c: () => `项王即日因留沛公与饮。`, v: "项王当天留沛公一同饮酒。", note: "" },
+            { c: () => `项王、项伯东向坐；`, v: "项王项伯面向东坐尊位；", note: "古礼室内以东向为最尊，故项王东向坐。", noteType: "正义", hasMap: true },
+            { c: () => `亚父南向坐——`, v: "亚父面向南坐次尊之位，", note: "" },
+            { c: () => `亚父者，${pName('范增','范增','前277-前204')}也；`, v: "亚父就是谋士范增；", note: "" },
+            { c: () => `沛公北向坐；`, v: "沛公面向北坐居臣属位；", note: "" },
+            { c: () => `${pName('张良','张良','?-前186')}西向侍。`, v: "张良面向西陪侍在侧。", note: "" },
+            { c: () => `范增数目项王，`, v: "范增多次向项王使眼色，", note: "" },
+            { c: () => `举所佩玉${hzPy('玦','jué')}以示之者三，`, v: "再三举佩玉玦暗示决断，", note: "玦谐音决，示当断则断，急击勿失。", noteType: "集解" },
+            { c: () => `项王默然不应。`, v: "项王却沉默不作回应。", note: "" },
+            { c: () => `项庄拔剑起舞，`, v: "随后项庄入帐拔剑起舞，", note: "" },
+            { c: () => `项伯亦拔剑起舞，`, v: "项伯也同时拔剑起舞，", note: "" },
+            { c: () => `常以身翼蔽沛公，`, v: "常如鸟翼用身体掩护沛公，", note: "" },
+            { c: () => `庄不得击。`, v: "使项庄始终无法刺击。", note: "" },
+            { c: () => `${pName('樊哙','樊哙','前242-前189')}即带剑拥盾入军门，`, v: "樊哙随即带剑举盾闯军门，", note: "" },
+            { c: () => `披帷西向立，`, v: "掀开帐幕面向西站立，", note: "" },
+            { c: () => `${hzPy('瞋','chēn')}目视项王，`, v: "张目怒视席上的项王，", note: "" },
+            { c: () => `头发上指，`, v: "愤怒得头发直竖向上，", note: "" },
+            { c: () => `目${hzPy('眦','zì')}尽裂。`, v: "眼眶内角都快要裂开。", note: "瞋目，张目怒视；目眦，眼眶内角也。", noteType: "索隐" },
+            { c: () => `项王按剑而${hzPy('跽','jì')}曰：`, v: "项王握剑柄挺身长跪问：", note: "跽，长跪挺腰也，乃戒备之姿。", noteType: "集解" },
+            { c: () => `“客何为者？”`, v: "来客究竟是什么人？", note: "" },
+            { c: () => `张良曰：“沛公之${termBox('参乘','参乘')}樊哙者也。”`, v: "张良答：是沛公参乘樊哙。", note: "" },
+            { c: () => `项王曰：“壮士！赐之卮酒。”`, v: "项王赞叹：壮士！赐酒。", note: "" }
+          ]
+        }
+      ]
+    },
+
+    "qinshihuang": {
+      id: "qinshihuang",
+      vol: "卷六",
+      title: "秦始皇本纪第六",
+      paragraphs: [
+        {
+          idx: 1,
+          topic: "初并天下与定号皇帝",
+          sandboxKey: "julu_map",
+          decisionKey: "julu_songyi",
+          commentary: "【王夫之《读通鉴论》】郡县之制，垂二千年而弗能改矣，合古今上下皆安之，势之所趋，岂非理而能然哉！",
+          dbText: "【史记集解】三十六郡含三川、河东、南阳、南郡、九江、会稽、琅邪、齐郡、巨鹿、邯郸等。",
+          ancientText: "【北宋景祐本】“王曰：去泰，著皇，采上古帝位號，號曰皇帝。”",
+          clauses: [
+            { c: () => `<span class="para-lead-bold">二十六年，</span>`, v: "秦王政二十六年，", note: "" },
+            { c: () => `初并天下，`, v: "首次统一天下六国，", note: "" },
+            { c: () => `${pName('秦始皇','秦王','前259-前210')}曰：`, v: "秦王下诏裁定说：", note: "" },
+            { c: () => `“去‘泰’，著‘皇’，`, v: "去掉泰字保留皇字，", note: "" },
+            { c: () => `采上古‘帝’位号，`, v: "采上古五帝位号，", note: "" },
+            { c: () => `号曰‘皇帝’。”`, v: "合称为皇帝尊号。", note: "蔡邕曰：至秦始皇二十六年始定朕为天子自称。", noteType: "集解" },
+            { c: () => `分天下以为三十六郡，`, v: "分天下为三十六郡，", note: "" },
+            { c: () => `一法度衡石丈尺，`, v: "统一法度与度量衡，", note: "" },
+            { c: () => `车同轨，`, v: "统一天下车轮间距，", note: "" },
+            { c: () => `书同文字。`, v: "统一全国通行文字。", note: "李斯作小篆通行天下。", noteType: "正义" }
+          ]
+        }
+      ]
+    }
+  };
+}
+
+// ============================================================================
+// 4. 全局状态与渲染引擎
+// ============================================================================
+const CHAPTER_ORDER = ["xiangyu", "qinshihuang"];
+let state = {
+  chapterKey: "xiangyu",
+  activeParaIdx: 0,
+  activeClauseIdx: null,
+  direction: "vertical",
+  punctStyle: "auto",
+  lang: "simp",
+  vbMode: "interleave",
+  noteVbOrder: "vb-first", // 默认“正文 → 双排译文 → 三家注”，避免长篇三家注把正文与译文隔断！
+  entryMode: "seal",
+  sizes: { main: 26, note: 20, vb: 15 },
+  weights: { main: 600, note: 400, vb: 400 },
+  hudVisible: false
+};
+
+function fmt(htmlStr) {
+  let out = transformPunctuation(htmlStr, state.direction === "vertical", state.punctStyle);
+  if (state.lang === "trad") {
+    out = convertTextToTrad(out);
+  }
+  return out;
+}
+
+function renderReader() {
+  const chapters = getChaptersData();
+  const ch = chapters[state.chapterKey];
+
+  document.getElementById("sysTopLeft").innerHTML = fmt(`《史记》${ch.vol} · ${ch.title}`);
+  document.getElementById("hdrChapterTitle").innerHTML = fmt(`${ch.vol}·${ch.title}`);
+  document.getElementById("btnDirToggle").textContent = state.direction === "vertical" ? fmt("竖排") : fmt("横排");
+  document.getElementById("btnLangToggle").textContent = state.lang === "trad" ? "繁體" : "简体";
+
+  const vbLabels = {
+    interleave: "文白:双排穿插",
+    popup: "文白:点句弹窗",
+    split: "文白:双栏",
+    none: "文白:纯文"
+  };
+  document.getElementById("btnVbQuick").innerHTML = fmt(vbLabels[state.vbMode]);
+
+  let fullClassicalHtml = "";
+  let fullVernacularHtml = "";
+
+  ch.paragraphs.forEach((p, pIdx) => {
+    const numHan = toHanNum(p.idx);
+    const badgeHtml = `<span class="para-num-badge" onclick="openParagraphStudyModal(event, ${pIdx}, 'map')" title="点击呼出第${numHan}段沙盘/决策卡/评点">${numHan}</span>`;
+
+    let paraC = badgeHtml;
+    let paraV = `<span class="para-num-badge" onclick="openParagraphStudyModal(event, ${pIdx}, 'map')">${numHan}</span>`;
+
+    p.clauses.forEach((cl, cIdx) => {
+      const isSelected = (state.activeParaIdx === pIdx && state.activeClauseIdx === cIdx);
+      const activeCls = isSelected ? "clause-active" : "";
+      const rawC = typeof cl.c === "function" ? cl.c() : cl.c;
+
+      const noteHtml = cl.note
+        ? fmt(noteSpan(cl.noteType || "集解", cl.note, Boolean(cl.hasMap), pIdx, cIdx))
+        : "";
+
+      const doubleRowVbHtml = buildDoubleRowVernacular(cl.v, pIdx, cIdx);
+
+      // 根据用户选择的顺序：默认“正文 → 双排译文 → 三家注”（vb-first），也可切为“正文 → 三家注 → 双排译文”（note-first）
+      if (state.noteVbOrder === "vb-first") {
+        paraC += `<span class="clause-unit ${activeCls}" id="cl-${pIdx}-${cIdx}" onclick="onClauseTap(event, ${pIdx}, ${cIdx})">${fmt(rawC)}</span>${doubleRowVbHtml}${noteHtml}`;
+      } else {
+        paraC += `<span class="clause-unit ${activeCls}" id="cl-${pIdx}-${cIdx}" onclick="onClauseTap(event, ${pIdx}, ${cIdx})">${fmt(rawC)}</span>${noteHtml}${doubleRowVbHtml}`;
+      }
+
+      paraV += `<span class="clause-unit ${activeCls}" onclick="onClauseTap(event, ${pIdx}, ${cIdx})">${fmt(cl.v)}</span>`;
+    });
+
+    paraC += `<span class="entry-wireframe-bar"><span class="wf-tag" onclick="openParagraphStudyModal(event, ${pIdx}, 'map')">${fmt("图")}</span><span class="wf-tag" onclick="openParagraphStudyModal(event, ${pIdx}, 'decision')">${fmt("策")}</span><span class="wf-tag" onclick="openParagraphStudyModal(event, ${pIdx}, 'comment')">${fmt("评")}</span><span class="wf-tag" onclick="openParagraphStudyModal(event, ${pIdx}, 'db')">${fmt("料")}</span><span class="wf-tag" onclick="openParagraphStudyModal(event, ${pIdx}, 'ancient')">${fmt("本")}</span></span>`;
+
+    fullClassicalHtml += `<div class="continuous-para">${paraC}</div>`;
+    fullVernacularHtml += `<div class="continuous-para">${paraV}</div>`;
+  });
+
+  const paneC = document.getElementById("paneClassical");
+  const paneV = document.getElementById("paneVernacularSplit");
+  paneC.innerHTML = fullClassicalHtml;
+  paneV.innerHTML = fullVernacularHtml;
+}
+
+function setNoteVbOrder(orderMode) {
+  state.noteVbOrder = orderMode;
+  document.getElementById("cfgOrderVbFirst").classList.toggle("active", orderMode === "vb-first");
+  document.getElementById("cfgOrderNoteFirst").classList.toggle("active", orderMode === "note-first");
+  renderReader();
+}
+
+// ============================================================================
+// 5. 正文 / 三家注 / 双排译文 独立字号与字重调整函数
+// ============================================================================
+function adjSize(target, delta) {
+  const limits = {
+    main: [18, 36],
+    note: [13, 28],
+    vb:   [11, 22]
+  };
+  const [minV, maxV] = limits[target];
+  state.sizes[target] = Math.min(maxV, Math.max(minV, state.sizes[target] + delta));
+
+  if (target === "main") {
+    document.documentElement.style.setProperty("--font-size-main", state.sizes.main + "px");
+    document.getElementById("valSizeMain").textContent = state.sizes.main + "px";
+  } else if (target === "note") {
+    document.documentElement.style.setProperty("--font-size-note", state.sizes.note + "px");
+    document.getElementById("valSizeNote").textContent = state.sizes.note + "px";
+  } else if (target === "vb") {
+    document.documentElement.style.setProperty("--font-size-vb", state.sizes.vb + "px");
+    document.getElementById("valSizeVb").textContent = state.sizes.vb + "px";
+  }
+}
+
+function setWeight(target, weightVal) {
+  state.weights[target] = weightVal;
+  [400, 500, 600, 700].forEach(w => {
+    const btn = document.getElementById(`w-${target}-${w}`);
+    if (btn) btn.classList.toggle("active", w === weightVal);
+  });
+
+  if (target === "main") {
+    document.documentElement.style.setProperty("--font-weight-main", weightVal);
+  } else if (target === "note") {
+    document.documentElement.style.setProperty("--font-weight-note", weightVal);
+  } else if (target === "vb") {
+    document.documentElement.style.setProperty("--font-weight-vb", weightVal);
+  }
+}
+
+// ============================================================================
+// 6. 停顿短句选中与正中弹窗精解
+// ============================================================================
+function onClauseTap(e, pIdx, cIdx) {
+  e.stopPropagation();
+  state.activeParaIdx = pIdx;
+  state.activeClauseIdx = cIdx;
+
+  document.querySelectorAll(".clause-unit.clause-active").forEach(el => el.classList.remove("clause-active"));
+  const target = document.getElementById(`cl-${pIdx}-${cIdx}`);
+  if (target) target.classList.add("clause-active");
+
+  openClauseModal(null, pIdx, cIdx);
+}
+
+function openClauseModal(e, pIdx, cIdx) {
+  if (e) e.stopPropagation();
+  state.activeParaIdx = pIdx;
+  state.activeClauseIdx = cIdx;
+
+  const ch = getChaptersData()[state.chapterKey];
+  const p = ch.paragraphs[pIdx];
+  const cl = p.clauses[cIdx];
+  const rawC = (typeof cl.c === "function" ? cl.c() : cl.c);
+  const colorCls = NOTE_TYPE_CLASS[cl.noteType || "集解"] || "type-jijie";
+
+  document.getElementById("clauseModalTitle").innerHTML = fmt(`📜 第${toHanNum(p.idx)}段 · 停顿短句精解 (${cIdx + 1}/${p.clauses.length})`);
+  document.getElementById("clauseModalBody").innerHTML = `
+    <div style="padding:10px 12px; background:var(--bg-panel); border-left:3.5px solid var(--c-vermilion); font-family:var(--reader-font); font-size:18px; font-weight:600; margin-bottom:10px;">
+      ${fmt(rawC)}
+    </div>
+    <div style="margin-bottom:10px;">
+      <div style="font-size:12px; font-weight:700; color:var(--c-vb-fg); margin-bottom:3px;">${fmt("【本分句白话直解】")}</div>
+      <div style="font-size:16px; font-weight:600; color:var(--ink-main);">${fmt(cl.v)}</div>
+    </div>
+    ${cl.note ? `
+      <div class="${colorCls}" style="padding:9px 11px; border-radius:4px; font-size:14.5px; margin-bottom:10px;">
+        <strong>${fmt(`〔${cl.noteType || '集解'}〕— `)}</strong><span>${fmt(cl.note)}</span>
+      </div>
+    ` : `<div style="font-size:12.5px; color:var(--ink-muted); margin-bottom:10px;">${fmt("（本短句无额外三家注，可点击下方按钮查看前后短句或本段沙盘推演）")}</div>`}
+    <div style="display:flex; justify-content:space-between; gap:6px;">
+      <button class="micro-btn" onclick="stepClause(-1)">${fmt("‹ 上一短句")}</button>
+      <button class="micro-btn accent" onclick="closeModal('clauseModal'); openParagraphStudyModal(null, ${pIdx}, 'map')">${fmt("🗺️ 本段沙盘/决策")}</button>
+      <button class="micro-btn" onclick="stepClause(1)">${fmt("下一短句 ›")}</button>
+    </div>
+  `;
+  openModal("clauseModal");
+}
+
+function stepClause(delta) {
+  const ch = getChaptersData()[state.chapterKey];
+  const p = ch.paragraphs[state.activeParaIdx];
+  const nextC = (state.activeClauseIdx + delta + p.clauses.length) % p.clauses.length;
+  onClauseTap({ stopPropagation: () => {} }, state.activeParaIdx, nextC);
+}
+
+// ============================================================================
+// 7. 整屏流式翻页与三区手势
+// ============================================================================
+function scrollScreenPage(dir) {
+  const paneC = document.getElementById("paneClassical");
+  if (state.direction === "vertical") {
+    const step = paneC.clientWidth * 0.88;
+    paneC.scrollLeft -= dir * step;
+  } else {
+    const step = paneC.clientHeight * 0.88;
+    paneC.scrollTop += dir * step;
+  }
+}
+
+function handleStageBlankTap(e) {
+  const rect = document.getElementById("readerStage").getBoundingClientRect();
+  const relX = (e.clientX - rect.left) / rect.width;
+  if (relX < 0.24) {
+    scrollScreenPage(state.direction === "vertical" ? 1 : -1);
+  } else if (relX > 0.76) {
+    scrollScreenPage(state.direction === "vertical" ? -1 : 1);
+  } else {
+    state.hudVisible = !state.hudVisible;
+    document.body.classList.toggle("hud-visible", state.hudVisible);
+  }
+}
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowLeft" || e.key === "PageDown" || e.key === "AudioVolumeDown") {
+    scrollScreenPage(state.direction === "vertical" ? 1 : -1);
+  } else if (e.key === "ArrowRight" || e.key === "PageUp" || e.key === "AudioVolumeUp") {
+    scrollScreenPage(state.direction === "vertical" ? -1 : 1);
+  }
+});
+
+// ============================================================================
+// 8. 段落沙盘/决策卡/评点正中弹窗
+// ============================================================================
+let currentStudyTab = "map";
+
+function openParagraphStudyModal(e, pIdx, defaultTab) {
+  if (e) e.stopPropagation();
+  if (typeof pIdx === "number") state.activeParaIdx = pIdx;
+  currentStudyTab = defaultTab || "map";
+  const ch = getChaptersData()[state.chapterKey];
+  const p = ch.paragraphs[state.activeParaIdx] || ch.paragraphs[0];
+  document.getElementById("studyModalTitle").innerHTML = fmt(`◈ 第${toHanNum(p.idx)}段研读：${p.topic}`);
+  switchStudyTab(currentStudyTab);
+  openModal("studyModal");
+}
+
+function switchStudyTab(tabName) {
+  currentStudyTab = tabName;
+  document.querySelectorAll("#studyTabsBar .eink-opt-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("data-tab") === tabName);
+  });
+
+  const ch = getChaptersData()[state.chapterKey];
+  const p = ch.paragraphs[state.activeParaIdx] || ch.paragraphs[0];
+  const box = document.getElementById("studyTabContent");
+
+  if (tabName === "map") {
+    const sb = SANDBOX_DB[p.sandboxKey] || SANDBOX_DB["hongmen_map"];
+    box.innerHTML = `
+      <div style="font-weight:700; color:var(--c-suoyin-fg); margin-bottom:4px;">${fmt(sb.title)}</div>
+      <p style="font-size:12.5px; color:var(--ink-sub); margin-bottom:8px;">${fmt(sb.desc)}</p>
+      ${sb.svg}
+      <div class="cfg-row" style="margin-top:8px;">
+        <button class="micro-btn" onclick="renderSpecificSandbox('julu_map')">${fmt("巨鹿破釜沉舟图")}</button>
+        <button class="micro-btn" onclick="renderSpecificSandbox('hongmen_map')">${fmt("鸿门宴座次礼制图")}</button>
+      </div>
+    `;
+  } else if (tabName === "decision") {
+    const decKey = p.decisionKey || "hongmen";
+    const dec = DECISION_DB[decKey];
+    box.innerHTML = `
+      <div style="font-weight:700; color:var(--c-vermilion); margin-bottom:6px;">🎯 ${fmt(dec.title)}</div>
+      <p style="font-size:12.5px; background:var(--bg-panel); padding:8px; border:1px solid var(--border-soft); margin-bottom:8px;">${fmt(dec.context)}</p>
+      ${dec.options.map((o, idx) => `
+        <div class="decision-card-opt" onclick="pickDecisionOpt(this, '${decKey}', ${idx})">${fmt(o.label)}</div>
+      `).join("")}
+      <div id="decResultArea" style="margin-top:8px; padding:8px; border-left:3px solid var(--c-vermilion); background:var(--c-vermilion-bg); display:none;"></div>
+    `;
+  } else if (tabName === "comment") {
+    box.innerHTML = `
+      <div style="padding:10px; border:1.5px solid var(--c-jijie-fg); background:var(--c-jijie-bg);">
+        <div style="font-weight:700; color:var(--c-jijie-fg); margin-bottom:4px;">📖 ${fmt("名家批注与直解")}</div>
+        <div>${fmt(p.commentary)}</div>
+      </div>
+    `;
+  } else if (tabName === "db") {
+    box.innerHTML = `
+      <div style="padding:10px; border:1.5px solid var(--border-ink); background:var(--bg-panel);">
+        <div style="font-weight:700; margin-bottom:4px;">📚 ${fmt("《读史方舆纪要》与平行史料")}</div>
+        <div>${fmt(p.dbText)}</div>
+      </div>
+    `;
+  } else if (tabName === "ancient") {
+    box.innerHTML = `
+      <div style="padding:10px; border:1.5px solid var(--c-jiaoji-fg); background:var(--c-jiaoji-bg);">
+        <div style="font-weight:700; color:var(--c-jiaoji-fg); margin-bottom:4px;">📜 ${fmt("宋本/三家注善本异文校勘")}</div>
+        <div>${fmt(p.ancientText)}</div>
+      </div>
+    `;
+  }
+}
+
+function renderSpecificSandbox(sbKey) {
+  const sb = SANDBOX_DB[sbKey];
+  document.getElementById("studyTabContent").innerHTML = `
+    <div style="font-weight:700; color:var(--c-suoyin-fg); margin-bottom:4px;">${fmt(sb.title)}</div>
+    <p style="font-size:12.5px; color:var(--ink-sub); margin-bottom:8px;">${fmt(sb.desc)}</p>
+    ${sb.svg}
+    <div class="cfg-row" style="margin-top:8px;">
+      <button class="micro-btn" onclick="renderSpecificSandbox('julu_map')">${fmt("巨鹿破釜沉舟图")}</button>
+      <button class="micro-btn" onclick="renderSpecificSandbox('hongmen_map')">${fmt("鸿门宴座次礼制图")}</button>
+    </div>
+  `;
+}
+
+function pickDecisionOpt(el, key, idx) {
+  document.querySelectorAll("#studyTabContent .decision-card-opt").forEach(d => d.classList.remove("selected"));
+  el.classList.add("selected");
+  const res = document.getElementById("decResultArea");
+  res.style.display = "block";
+  res.innerHTML = fmt(DECISION_DB[key].options[idx].result);
+}
+
+function openEntityModal(e, category, key) {
+  if (e) e.stopPropagation();
+  const item = (ENTITIES_DB[category] || {})[key];
+  if (!item) return;
+  document.getElementById("entityModalTitle").innerHTML = fmt(item.title);
+  document.getElementById("entityModalBody").innerHTML = `
+    <div style="margin-bottom:8px;"><span class="micro-btn accent">${fmt(item.role)}</span></div>
+    <p style="font-size:14.5px; line-height:1.75;">${fmt(item.desc)}</p>
+  `;
+  openModal("entityModal");
+}
+
+// ============================================================================
+// 9. 配置项切换函数
+// ============================================================================
+function toggleNoteReminder(btnEl) {
+  btnEl.classList.toggle("active");
+  document.body.classList.toggle("hide-note-reminder", !btnEl.classList.contains("active"));
+}
+
+function toggleNoteFulltext(btnEl) {
+  btnEl.classList.toggle("active");
+  document.body.classList.toggle("show-note-fulltext", btnEl.classList.contains("active"));
+}
+
+function toggleNoteBg(btnEl) {
+  btnEl.classList.toggle("active");
+  document.body.classList.toggle("note-bg-off", !btnEl.classList.contains("active"));
+}
+
+function setVbMode(mode) {
+  state.vbMode = mode;
+  document.body.classList.remove("vb-mode-popup", "vb-mode-interleave", "vb-mode-split", "vb-mode-none");
+  document.body.classList.add("vb-mode-" + mode);
+  document.getElementById("cfgVbPopup").classList.toggle("active", mode === "popup");
+  document.getElementById("cfgVbInterleave").classList.toggle("active", mode === "interleave");
+  document.getElementById("cfgVbSplit").classList.toggle("active", mode === "split");
+  document.getElementById("cfgVbNone").classList.toggle("active", mode === "none");
+  renderReader();
+}
+
+function cycleVbMode() {
+  const order = ["interleave", "popup", "split", "none"];
+  setVbMode(order[(order.indexOf(state.vbMode) + 1) % order.length]);
+}
+
+function toggleLifespanShow(btnEl) {
+  btnEl.classList.toggle("active");
+  document.body.classList.toggle("hide-lifespan", !btnEl.classList.contains("active"));
+}
+
+function togglePinyinShow(btnEl) {
+  btnEl.classList.toggle("active");
+  document.body.classList.toggle("hide-pinyin", !btnEl.classList.contains("active"));
+}
+
+function setDirection(dir) {
+  state.direction = dir;
+  document.body.classList.remove("dir-vertical", "dir-horizontal");
+  document.body.classList.add("dir-" + dir);
+  document.getElementById("cfgDirVert").classList.toggle("active", dir === "vertical");
+  document.getElementById("cfgDirHoriz").classList.toggle("active", dir === "horizontal");
+  renderReader();
+}
+
+function quickToggleDirection() {
+  setDirection(state.direction === "vertical" ? "horizontal" : "vertical");
+}
+
+function setLanguage(lang) {
+  state.lang = lang;
+  document.getElementById("cfgLangSimp").classList.toggle("active", lang === "simp");
+  document.getElementById("cfgLangTrad").classList.toggle("active", lang === "trad");
+  renderReader();
+}
+
+function quickToggleTrad() {
+  setLanguage(state.lang === "simp" ? "trad" : "simp");
+}
+
+function setEntryMode(mode) {
+  state.entryMode = mode;
+  document.body.classList.remove("entry-mode-seal", "entry-mode-both");
+  document.body.classList.add("entry-mode-" + mode);
+  document.getElementById("cfgEntrySeal").classList.toggle("active", mode === "seal");
+  document.getElementById("cfgEntryBoth").classList.toggle("active", mode === "both");
+}
+
+function setEinkTheme(theme) {
+  document.body.classList.remove("eink-bw", "eink-dark");
+  if (theme === "bw") document.body.classList.add("eink-bw");
+  if (theme === "dark") document.body.classList.add("eink-dark");
+  document.getElementById("cfgThemeColor").classList.toggle("active", theme === "color");
+  document.getElementById("cfgThemeBw").classList.toggle("active", theme === "bw");
+  document.getElementById("cfgThemeDark").classList.toggle("active", theme === "dark");
+}
+
+function setReaderFont(type) {
+  document.getElementById("cfgFontSong").classList.toggle("active", type === "song");
+  document.getElementById("cfgFontKai").classList.toggle("active", type === "kai");
+  document.documentElement.style.setProperty("--reader-font", type === "kai" ? "var(--font-kai)" : "var(--font-serif)");
+}
+
+function renderHubMenu() {
+  const chapters = getChaptersData();
+  document.getElementById("hubChapterList").innerHTML = CHAPTER_ORDER.map(k => {
+    const ch = chapters[k];
+    const active = (k === state.chapterKey) ? "active" : "";
+    return `<button class="eink-opt-btn ${active}" onclick="state.chapterKey='${k}'; closeModal('hubModal'); renderReader();">${fmt(ch.vol + "·" + ch.title)}</button>`;
+  }).join("");
+}
+
+function openModal(id) {
+  if (id === "hubModal") renderHubMenu();
+  document.getElementById(id).classList.add("open");
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove("open");
+}
+
+function closeModalOnBg(e, id) {
+  if (e.target.id === id) closeModal(id);
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  renderReader();
+});
+</script>
+</body>
+</html>
