@@ -140,7 +140,7 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: var(--bg-outer);
+    background-color: var(--bg-paper);
     color: var(--ink-main);
     font-family: var(--font-sans);
     user-select: none;
@@ -783,6 +783,33 @@
     border-color: var(--c-vermilion);
     color: var(--c-vermilion);
   }
+
+  /* GitHub Pages / browser full-viewport mode: remove simulated 7-inch outer frame */
+  .app-shell,
+  body.frame-7inch .app-shell {
+    width: 100vw;
+    height: 100dvh;
+    min-width: 100vw;
+    min-height: 100dvh;
+    margin: 0;
+    padding: 0;
+    display: block;
+    background: var(--bg-paper);
+  }
+
+  .eink-device,
+  body.frame-7inch .eink-device {
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: var(--bg-paper);
+  }
+
 </style>
 </head>
 <body class="frame-7inch dir-vertical vb-mode-interleave show-note-fulltext entry-mode-seal">
